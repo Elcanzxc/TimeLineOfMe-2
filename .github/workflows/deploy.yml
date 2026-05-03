@@ -42,6 +42,7 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          set -e
           cd ~/tlom
           # Создаем .env файл из секретов GitHub
           echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}" > .env
