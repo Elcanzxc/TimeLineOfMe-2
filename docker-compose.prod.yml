@@ -16,6 +16,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
       - ConnectionStrings__Redis=redis:6379
+      - ClientUrl=http://${EC2_HOST}
       - Jwt__Secret=${JWT_SECRET}
 
       - Jwt__Issuer=TLOM.API

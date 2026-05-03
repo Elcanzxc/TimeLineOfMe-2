@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using TLOM.Application.Common.Interfaces;
 using TLOM.Application.Features.Auth.Responses;
@@ -14,15 +15,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
     private readonly IApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailSender _emailSender;
+    private readonly IConfiguration _configuration;
 
     public RegisterCommandHandler(
         IApplicationDbContext context,
         IPasswordHasher passwordHasher,
-        IEmailSender emailSender)
+        IEmailSender emailSender,
+        IConfiguration configuration)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _emailSender = emailSender;
+        _configuration = configuration;
     }
 
     public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -61,7 +65,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         await _context.SaveChangesAsync(cancellationToken);
 
         // Отправка письма (ссылка может быть на фронтенд /confirm-email или напрямую на бэкенд)
-        var confirmationLink = $"http://localhost:5173/confirm-email?userId={account.Id}&token={token}";
+        var clientUrl = _configuration["ClientUrl"] ?? "http://localhost:5173";
+        var confirmationLink = $"{clientUrl}/confirm-email?userId={account.Id}&token={token}";
         await _emailSender.SendEmailAsync(
             account.Email, 
             "Confirm your Time Line Of Me account", 

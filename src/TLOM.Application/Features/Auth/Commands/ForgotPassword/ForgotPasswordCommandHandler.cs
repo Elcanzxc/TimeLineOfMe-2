@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using TLOM.Application.Common.Interfaces;
 
@@ -8,13 +9,16 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 {
     private readonly IApplicationDbContext _context;
     private readonly IEmailSender _emailSender;
+    private readonly IConfiguration _configuration;
 
     public ForgotPasswordCommandHandler(
         IApplicationDbContext context,
-        IEmailSender emailSender)
+        IEmailSender emailSender,
+        IConfiguration configuration)
     {
         _context = context;
         _emailSender = emailSender;
+        _configuration = configuration;
     }
 
     public async Task<bool> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
@@ -32,7 +36,8 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        var resetLink = $"http://localhost:5173/reset-password?email={account.Email}&token={resetToken}";
+        var clientUrl = _configuration["ClientUrl"] ?? "http://localhost:5173";
+        var resetLink = $"{clientUrl}/reset-password?email={account.Email}&token={resetToken}";
         
         await _emailSender.SendEmailAsync(
             account.Email,
