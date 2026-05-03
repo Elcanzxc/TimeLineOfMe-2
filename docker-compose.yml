@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "TlomDev@2026!"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  api:
+    build:
+      context: .
+      dockerfile: src/TLOM.API/Dockerfile
+    ports:
+      - "5170:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=TLOM;User Id=sa;Password=TlomDev@2026!;TrustServerCertificate=True;
+      - Jwt__Secret=SuperSecretKeyForTlomApp2026!WithVeryLongLength
+      - Jwt__Issuer=TLOM.API
+      - Jwt__Audience=TLOM.Client
+    depends_on:
+      - db
+
+  client:
+    build:
+      context: src/TLOM.Client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  sql_data:

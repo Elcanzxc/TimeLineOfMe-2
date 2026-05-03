@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "feed": "Feed",
+    "search": "Search",
+    "timeline": "Timeline",
+    "find_friends": "Find Friends",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "Welcome to Time Line Of Me",
+    "subtitle": "Track your favorite movies, books, games, and music."
+  }
+}

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TLOM.API/TLOM.API.csproj" />
+    <Project Path="src/TLOM.Application/TLOM.Application.csproj" />
+    <Project Path="src/TLOM.Domain/TLOM.Domain.csproj" />
+    <Project Path="src/TLOM.Infrastructure/TLOM.Infrastructure.csproj" />
+  </Folder>
+</Solution>
