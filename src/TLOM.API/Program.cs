@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -91,6 +92,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// === Apply Migrations Automatically ===
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<TLOM.Infrastructure.Persistence.ApplicationDbContext>();
+        if (dbContext.Database.IsSqlServer())
+        {
+            dbContext.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An error occurred while migrating the database.");
+    }
+}
 
 // === Middleware Pipeline ===
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();

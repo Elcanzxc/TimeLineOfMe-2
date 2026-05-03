@@ -1,6 +1,11 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:alpine
+    expose:
+      - "6379"
+
   api:
     build:
       context: .
@@ -10,7 +15,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - ConnectionStrings__Redis=redis:6379
       - Jwt__Secret=${JWT_SECRET}
+
       - Jwt__Issuer=TLOM.API
       - Jwt__Audience=TLOM.Client
       - Google__ClientId=${GOOGLE_CLIENT_ID}
