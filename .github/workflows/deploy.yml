@@ -63,7 +63,21 @@ jobs:
           echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
           echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
           
-          docker-compose -f docker-compose.prod.yml down
-          docker-compose -f docker-compose.prod.yml build
-          docker-compose -f docker-compose.prod.yml up -d
+          docker compose -f docker-compose.prod.yml down || true
+          
+          # Install certbot and get SSL cert if not exists
+          if [ ! -f "/etc/letsencrypt/live/${{ secrets.EC2_HOST }}/fullchain.pem" ]; then
+            sudo apt-get update -y && sudo apt-get install -y certbot
+            sudo certbot certonly --standalone -d ${{ secrets.EC2_HOST }} --agree-tos --email ${{ secrets.SMTP_FROM_EMAIL }} --non-interactive
+          fi
+          
+          # Create/update docker volume with certs
+          docker volume create letsencrypt_certs || true
+          CERT_DIR=$(docker volume inspect letsencrypt_certs --format '{{ .Mountpoint }}')
+          sudo cp /etc/letsencrypt/live/${{ secrets.EC2_HOST }}/fullchain.pem $CERT_DIR/fullchain.pem
+          sudo cp /etc/letsencrypt/live/${{ secrets.EC2_HOST }}/privkey.pem $CERT_DIR/privkey.pem
+          sudo chmod 644 $CERT_DIR/*.pem
+          
+          docker compose -f docker-compose.prod.yml build
+          docker compose -f docker-compose.prod.yml up -d
           docker system prune -f

@@ -21,7 +21,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=db;Database=TLOM;User Id=sa;Password=TlomProd@2026!;TrustServerCertificate=True;
-      - ClientUrl=http://${EC2_HOST}
+      - ClientUrl=https://${EC2_HOST}
       - Jwt__Secret=${JWT_SECRET}
       - Jwt__Issuer=TLOM.API
       - Jwt__Audience=TLOM.Client
@@ -54,9 +54,15 @@ services:
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - letsencrypt_certs:/etc/nginx/ssl:ro
+      - ./src/TLOM.Client/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - api
     restart: unless-stopped
 
 volumes:
   sql_data:
+  letsencrypt_certs:
+    external: true
