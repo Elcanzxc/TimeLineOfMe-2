@@ -19,7 +19,7 @@ export function ProtectedRoute() {
 
   // Prevent accessing onboarding if profile is already complete
   if (user && user.isProfileCompleted && location.pathname === "/onboarding") {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/feed" replace />;
   }
 
   // Если авторизован, рендерим дочерние маршруты

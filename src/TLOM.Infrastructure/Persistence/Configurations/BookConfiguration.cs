@@ -12,7 +12,7 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
         builder.ToTable("Books");
 
         builder.Property(b => b.Author).HasMaxLength(DomainConstants.MaxAuthorLength);
-        builder.Property(b => b.Genre).HasMaxLength(DomainConstants.MaxGenreLength);
+
         builder.Property(b => b.Publisher).HasMaxLength(DomainConstants.MaxPublisherLength);
         builder.Property(b => b.ISBN).HasMaxLength(DomainConstants.MaxIsbnLength);
         builder.Property(b => b.Language).HasMaxLength(DomainConstants.MaxLanguageLength);

@@ -33,12 +33,14 @@ public class CreateCommentCommandHandler : IRequestHandler<CreateCommentCommand,
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notificationService;
+    private readonly IRealtimePushService? _pushService;
 
-    public CreateCommentCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, INotificationService notificationService)
+    public CreateCommentCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, INotificationService notificationService, IRealtimePushService? pushService = null)
     {
         _context = context;
         _currentUser = currentUser;
         _notificationService = notificationService;
+        _pushService = pushService;
     }
 
     public async Task<CommentResponse> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
@@ -72,19 +74,36 @@ public class CreateCommentCommandHandler : IRequestHandler<CreateCommentCommand,
                 cancellationToken: cancellationToken);
         }
 
-        var username = await _context.UserProfiles
+        var userInfo = await _context.UserProfiles
             .Where(p => p.Id == userId)
-            .Select(p => p.Username)
+            .Select(p => new { p.Username, p.AvatarUrl })
             .FirstAsync(cancellationToken);
 
-        return new CommentResponse
+        var response = new CommentResponse
         {
             Id = comment.Id,
             UserId = userId,
-            Username = username,
+            Username = userInfo.Username,
+            AvatarUrl = userInfo.AvatarUrl,
             EntryId = request.EntryId,
             Text = comment.Text,
             CreatedAt = comment.CreatedAt
         };
+
+        // Push real-time event for live comment updates
+        if (_pushService is not null)
+        {
+            // Push to entry owner so they see the comment live
+            if (entry.UserId != userId)
+            {
+                await _pushService.PushEventAsync(entry.UserId, "NewComment",
+                    new { entryId = request.EntryId, comment = response }, cancellationToken);
+            }
+            // Push to commenter too (for their own UI consistency)
+            await _pushService.PushEventAsync(userId, "NewComment",
+                new { entryId = request.EntryId, comment = response }, cancellationToken);
+        }
+
+        return response;
     }
 }

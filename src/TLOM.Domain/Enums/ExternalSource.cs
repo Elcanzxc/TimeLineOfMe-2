@@ -8,5 +8,6 @@ public enum ExternalSource
     TMDB = 0,
     GoogleBooks = 1,
     Steam = 2,
-    Spotify = 3
+    Spotify = 3,
+    Deezer = 4
 }

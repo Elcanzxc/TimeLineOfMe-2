@@ -17,6 +17,11 @@ import { UserProfilePage } from '@/pages/users/UserProfilePage';
 import { SettingsPage } from '@/pages/users/SettingsPage';
 import { FeedPage } from '@/pages/feed/FeedPage';
 import { ProtectedRoute } from '@/features/auth/ui/ProtectedRoute';
+import { StatsPage } from '@/pages/stats/StatsPage';
+import { AdminLayout } from '@/app/layouts/AdminLayout';
+import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { AuditLogsPage } from '@/pages/admin/AuditLogsPage';
+import { UsersManagementPage } from '@/pages/admin/UsersManagementPage';
 
 export const router = createBrowserRouter([
   {
@@ -85,8 +90,30 @@ export const router = createBrowserRouter([
           {
             path: 'onboarding',
             element: <OnboardingPage />
+          },
+          {
+            path: 'stats',
+            element: <StatsPage />
           }
         ]
+      }
+    ]
+  },
+  {
+    path: '/admin',
+    element: <AdminLayout />,
+    children: [
+      {
+        index: true,
+        element: <AdminDashboardPage />
+      },
+      {
+        path: 'users',
+        element: <UsersManagementPage />
+      },
+      {
+        path: 'audit',
+        element: <AuditLogsPage />
       }
     ]
   }

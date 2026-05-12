@@ -22,6 +22,21 @@ namespace TLOM.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("GenreMediaItem", b =>
+                {
+                    b.Property<Guid>("GenresId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MediaItemsId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("GenresId", "MediaItemsId");
+
+                    b.HasIndex("MediaItemsId");
+
+                    b.ToTable("MediaItemGenres", (string)null);
+                });
+
             modelBuilder.Entity("TLOM.Domain.Entities.Account", b =>
                 {
                     b.Property<Guid>("Id")
@@ -60,13 +75,6 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("PasswordResetTokenExpiry")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RefreshToken")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("RoleId")
@@ -145,8 +153,14 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("EntryId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -177,6 +191,15 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsFavorite")
                         .HasColumnType("bit");
 
@@ -192,6 +215,9 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.Property<string>("Review")
                         .HasMaxLength(10000)
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -272,6 +298,25 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Follows", (string)null);
+                });
+
+            modelBuilder.Entity("TLOM.Domain.Entities.Genre", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Genres", (string)null);
                 });
 
             modelBuilder.Entity("TLOM.Domain.Entities.Like", b =>
@@ -404,6 +449,39 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.ToTable("Notifications", (string)null);
                 });
 
+            modelBuilder.Entity("TLOM.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("RefreshTokens", (string)null);
+                });
+
             modelBuilder.Entity("TLOM.Domain.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -465,6 +543,9 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsProfileCompleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsProfilePrivate")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -482,8 +563,7 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.HasIndex("AccountId")
                         .IsUnique();
 
-                    b.HasIndex("Username")
-                        .IsUnique();
+                    b.HasIndex("Username");
 
                     b.ToTable("UserProfiles", (string)null);
                 });
@@ -493,10 +573,6 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.HasBaseType("TLOM.Domain.Entities.MediaItem");
 
                     b.Property<string>("Author")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Genre")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -544,10 +620,6 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Genre")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<bool>("IsMultiplayer")
                         .HasColumnType("bit");
 
@@ -585,10 +657,6 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.Property<int?>("Duration")
                         .HasColumnType("int");
 
-                    b.Property<string>("Genre")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("Language")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -615,10 +683,6 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
-                    b.Property<string>("Genre")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("Label")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -636,6 +700,21 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.ToTable("MusicTracks", (string)null);
+                });
+
+            modelBuilder.Entity("GenreMediaItem", b =>
+                {
+                    b.HasOne("TLOM.Domain.Entities.Genre", null)
+                        .WithMany()
+                        .HasForeignKey("GenresId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TLOM.Domain.Entities.MediaItem", null)
+                        .WithMany()
+                        .HasForeignKey("MediaItemsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TLOM.Domain.Entities.Account", b =>
@@ -765,6 +844,17 @@ namespace TLOM.Infrastructure.Persistence.Migrations
                     b.Navigation("Recipient");
                 });
 
+            modelBuilder.Entity("TLOM.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("TLOM.Domain.Entities.Account", "Account")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("TLOM.Domain.Entities.UserProfile", b =>
                 {
                     b.HasOne("TLOM.Domain.Entities.Account", "Account")
@@ -845,6 +935,8 @@ namespace TLOM.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TLOM.Domain.Entities.Account", b =>
                 {
                     b.Navigation("AuditLogs");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("UserProfile");
                 });

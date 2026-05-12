@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { NotificationsProvider } from '@/features/notifications/ui/NotificationsProvider';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ThemeProvider } from '@/shared/theme/ThemeProvider';
 
@@ -25,9 +24,7 @@ export function Providers({ children }: ProvidersProps) {
     <ThemeProvider defaultTheme="system" storageKey="tlom-theme">
       <GoogleOAuthProvider clientId={googleClientId}>
         <QueryClientProvider client={queryClient}>
-          <NotificationsProvider>
-            {children}
-          </NotificationsProvider>
+          {children}
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </ThemeProvider>

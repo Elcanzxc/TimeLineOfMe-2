@@ -58,6 +58,7 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, CursorPagedResu
         var items = await query
             .OrderByDescending(e => e.CreatedAt)
             .Take(pageSize + 1)
+            .Include(e => e.User)
             .Include(e => e.MediaItem)
             .Include(e => e.Events.OrderBy(ev => ev.DateTime))
             .Include(e => e.Likes)

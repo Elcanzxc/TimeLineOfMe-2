@@ -43,4 +43,6 @@ public abstract class MediaItem : AuditableEntity
 
     // === Navigation Properties ===
     public ICollection<Entry> Entries { get; set; } = [];
+
+    public ICollection<Genre> Genres { get; set; } = [];
 }

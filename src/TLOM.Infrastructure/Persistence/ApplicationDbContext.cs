@@ -26,12 +26,14 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     // === Identity ===
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Role> Roles => Set<Role>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     // === Profile ===
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 
     // === Media Content (TPT) ===
     public DbSet<MediaItem> MediaItems => Set<MediaItem>();
+    public DbSet<Genre> Genres => Set<Genre>();
     public DbSet<Movie> Movies => Set<Movie>();
     public DbSet<Book> Books => Set<Book>();
     public DbSet<Game> Games => Set<Game>();

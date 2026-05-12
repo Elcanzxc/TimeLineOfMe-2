@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans: "Inter", "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
 
@@ -35,48 +38,55 @@
 }
 
 @layer base {
+  /* 
+   * Light mode: #EDE8E8, #F6F4F4, #B2B2A9
+   * Dark mode:  #131B23, #1D2835, #476485
+   */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    /* Light Mode — warm neutral palette */
+    --background: 0 4% 94%;            /* #EDE8E8 → hsl(0, 4%, 92%) */
+    --foreground: 210 20% 16%;          /* Dark text */
+    --card: 0 3% 96%;                   /* #F6F4F4 */
+    --card-foreground: 210 20% 16%;
+    --popover: 0 3% 96%;
+    --popover-foreground: 210 20% 16%;
+    --primary: 212 40% 40%;             /* #476485-ish, but richer */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 3% 70%;             /* #B2B2A9 */
+    --secondary-foreground: 210 20% 16%;
+    --muted: 0 2% 90%;                  /* Slightly darker than bg */
+    --muted-foreground: 210 8% 50%;
+    --accent: 212 40% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 60 3% 82%;                /* Warm border */
+    --input: 60 3% 82%;
+    --ring: 212 40% 40%;
+    --radius: 0.75rem;
   }
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Dark Mode — deep ocean palette */
+    --background: 210 28% 11%;          /* #131B23 */
+    --foreground: 210 20% 92%;
+    --card: 212 24% 16%;                /* #1D2835 */
+    --card-foreground: 210 20% 92%;
+    --popover: 212 24% 16%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 212 34% 40%;             /* #476485 */
+    --primary-foreground: 210 20% 95%;
+    --secondary: 210 20% 20%;
+    --secondary-foreground: 210 20% 92%;
+    --muted: 210 20% 18%;
+    --muted-foreground: 212 15% 60%;
+    --accent: 212 34% 40%;
+    --accent-foreground: 210 20% 95%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 210 20% 95%;
+    --border: 212 20% 22%;
+    --input: 212 20% 22%;
+    --ring: 212 34% 50%;
   }
 }
 
@@ -84,7 +94,137 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground font-sans;
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", "Space Grotesk", system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+
+  ::selection {
+    background-color: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+/* ──────────────────────────
+   Global Animations
+   ────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-12px) rotate(2deg); }
+  66% { transform: translateY(6px) rotate(-1deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.animate-gradient-x {
+  background-size: 300% 100%;
+  animation: gradient-shift-x 12s ease infinite;
+}
+
+@keyframes gradient-shift-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-count-up {
+  animation: count-up 0.6s ease-out forwards;
+}
+
+/* ──────────────────────────
+   Glass & Premium Effects
+   ────────────────────────── */
+.glass {
+  background: hsl(var(--card) / 0.6);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+.glass-strong {
+  background: hsl(var(--card) / 0.85);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+
+/* Premium gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)), hsl(212 60% 65%));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Smooth page transitions */
+.page-transition {
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }

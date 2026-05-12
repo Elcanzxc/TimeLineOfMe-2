@@ -49,7 +49,18 @@ public class NotificationService : INotificationService
         // SignalR real-time push (если зарегистрирован)
         if (_pushService is not null)
         {
-            await _pushService.PushNotificationAsync(recipientId, notification.Id, type.ToString(), message, cancellationToken);
+            string? actorUsername = null;
+            if (actorId.HasValue)
+            {
+                actorUsername = await _context.UserProfiles
+                    .Where(u => u.Id == actorId.Value)
+                    .Select(u => u.Username)
+                    .FirstOrDefaultAsync(cancellationToken);
+            }
+            await _pushService.PushNotificationAsync(
+                recipientId, notification.Id, type.ToString(), message,
+                actorId, actorUsername, entityType, entityId,
+                cancellationToken);
         }
     }
 

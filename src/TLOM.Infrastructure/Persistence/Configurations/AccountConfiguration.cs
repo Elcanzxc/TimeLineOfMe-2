@@ -23,8 +23,6 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.GoogleId)
             .HasMaxLength(DomainConstants.MaxGoogleIdLength);
 
-        builder.Property(a => a.RefreshToken)
-            .HasMaxLength(DomainConstants.MaxRefreshTokenLength);
 
         // === Индексы ===
         builder.HasIndex(a => a.Email).IsUnique();
@@ -39,6 +37,11 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.HasOne(a => a.UserProfile)
             .WithOne(p => p.Account)
             .HasForeignKey<UserProfile>(p => p.AccountId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(a => a.RefreshTokens)
+            .WithOne(rt => rt.Account)
+            .HasForeignKey(rt => rt.AccountId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

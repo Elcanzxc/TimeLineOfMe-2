@@ -11,8 +11,6 @@ public class Music : MediaItem
 
     public string? Album { get; set; }
 
-    public string? Genre { get; set; }
-
     /// <summary>
     /// Длительность трека в секундах.
     /// </summary>

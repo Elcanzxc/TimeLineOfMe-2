@@ -22,7 +22,7 @@ public class UsersController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("me")]
+    [HttpPut("profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileCommand command, CancellationToken ct)
     {
         var result = await _mediator.Send(command, ct);
@@ -30,10 +30,18 @@ public class UsersController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("me/onboarding")]
+    [HttpPost("onboarding")]
     public async Task<IActionResult> CompleteOnboarding([FromBody] TLOM.Application.Features.Users.Commands.CompleteOnboarding.CompleteOnboardingCommand command, CancellationToken ct)
     {
         var result = await _mediator.Send(command, ct);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchUsers([FromQuery] string query, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new TLOM.Application.Features.Users.Queries.SearchUsers.SearchUsersQuery { Query = query }, ct);
         return Ok(result);
     }
 }

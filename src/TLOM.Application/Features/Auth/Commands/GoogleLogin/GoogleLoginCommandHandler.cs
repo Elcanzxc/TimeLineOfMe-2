@@ -37,6 +37,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Aut
         var account = await _context.Accounts
             .Include(a => a.Role)
             .Include(a => a.UserProfile)
+            .Include(a => a.RefreshTokens)
             .FirstOrDefaultAsync(a => a.GoogleId == googleUser.GoogleId || a.Email == googleUser.Email, cancellationToken);
 
         bool isNewUser = account is null;
@@ -98,6 +99,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Aut
             account = await _context.Accounts
                 .Include(a => a.Role)
                 .Include(a => a.UserProfile)
+                .Include(a => a.RefreshTokens)
                 .FirstAsync(a => a.Id == account.Id, cancellationToken);
         }
         else
@@ -124,8 +126,12 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Aut
         var accessToken = _jwtService.GenerateAccessToken(claims);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
-        account.RefreshToken = refreshToken;
-        account.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        account.RefreshTokens.Add(new TLOM.Domain.Entities.RefreshToken
+        {
+            Token = refreshToken,
+            ExpiryTime = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow
+        });
         account.LastLoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
 

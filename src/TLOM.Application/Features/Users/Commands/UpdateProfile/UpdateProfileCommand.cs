@@ -13,4 +13,5 @@ public record UpdateProfileCommand : IRequest<UserProfileResponse>
     public string? Country { get; init; }
     public string? Region { get; init; }
     public string? AvatarUrl { get; init; }
+    public bool? IsProfilePrivate { get; init; }
 }

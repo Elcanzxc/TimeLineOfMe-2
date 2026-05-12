@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TLOM.Application.Features.Entries.Commands.CreateEntry;
 using TLOM.Application.Features.Entries.Commands.DeleteEntry;
-using TLOM.Application.Features.Entries.Commands.UpdateEntryStatus;
+using TLOM.Application.Features.Entries.Commands.UpdateEntry;
 using TLOM.Application.Features.Entries.Queries.GetEntry;
 using TLOM.Application.Features.Entries.Queries.GetUserEntries;
 using TLOM.Domain.Enums;
@@ -22,6 +22,20 @@ public class EntriesController : ControllerBase
     public async Task<IActionResult> GetEntry(Guid entryId, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetEntryQuery { EntryId = entryId }, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("public-showcase")]
+    public async Task<IActionResult> GetPublicShowcase(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new TLOM.Application.Features.Entries.Queries.GetPublicShowcase.GetPublicShowcaseQuery(), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("public-showcase-timelines")]
+    public async Task<IActionResult> GetShowcaseTimelines(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new TLOM.Application.Features.Entries.Queries.GetShowcaseTimelines.GetShowcaseTimelinesQuery(), ct);
         return Ok(result);
     }
 
@@ -54,8 +68,8 @@ public class EntriesController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("{entryId:guid}/status")]
-    public async Task<IActionResult> UpdateEntryStatus(Guid entryId, [FromBody] UpdateEntryStatusCommand command, CancellationToken ct)
+    [HttpPut("{entryId:guid}")]
+    public async Task<IActionResult> UpdateEntry(Guid entryId, [FromBody] UpdateEntryCommand command, CancellationToken ct)
     {
         var updated = command with { EntryId = entryId };
         var result = await _mediator.Send(updated, ct);

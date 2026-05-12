@@ -9,8 +9,6 @@ public class Book : MediaItem
 
     public int? PageCount { get; set; }
 
-    public string? Genre { get; set; }
-
     public string? Publisher { get; set; }
 
     /// <summary>

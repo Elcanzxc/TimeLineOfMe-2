@@ -62,25 +62,27 @@ public class CreateEntryCommandHandler : IRequestHandler<CreateEntryCommand, Ent
             throw new ConflictException("Этот контент уже добавлен в ваш таймлайн.");
         }
 
-        // Создаём Entry с начальным статусом Planned
         var entry = new Entry
         {
             Id = Guid.NewGuid(),
             UserId = userProfileId,
             MediaItemId = request.MediaItemId,
-            Status = EntryStatus.Planned,
-            IsPrivate = false,
-            IsFavorite = false
+            Status = request.Status ?? EntryStatus.Planned,
+            IsPrivate = request.IsPrivate,
+            IsFavorite = false,
+            Rating = request.Rating,
+            Review = request.Review,
+            StartedAt = request.StartedAt,
+            FinishedAt = request.FinishedAt
         };
 
-        // Создаём первый EntryEvent
         var entryEvent = new EntryEvent
         {
             Id = Guid.NewGuid(),
             EntryId = entry.Id,
-            Status = EntryStatus.Planned,
+            Status = entry.Status,
             DateTime = DateTime.UtcNow,
-            Note = request.Note
+            Note = request.Note ?? request.Review
         };
 
         _context.Entries.Add(entry);

@@ -480,3 +480,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+TLOM_Presentation.pptx
+create_presentation.py
+build_errors.txt

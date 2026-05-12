@@ -27,7 +27,7 @@ public class EmailService : IEmailSender
         var fromEmail = _configuration["Smtp:FromEmail"] ?? "noreply@tlom.com";
         var fromName = _configuration["Smtp:FromName"] ?? "Time Line Of Me";
 
-        if (string.IsNullOrEmpty(smtpHost) || smtpUsername == "YOUR_GMAIL@gmail.com")
+        if (string.IsNullOrEmpty(smtpHost) || string.IsNullOrEmpty(smtpUsername) || string.IsNullOrEmpty(smtpPassword))
         {
             _logger.LogWarning("SMTP is not fully configured in appsettings.json. Logging email to console.");
             _logger.LogInformation("--- SENDING EMAIL ---");

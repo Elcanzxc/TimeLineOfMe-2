@@ -11,4 +11,6 @@ public record CompleteOnboardingCommand : IRequest<UserProfileResponse>
     public DateTime? DateOfBirth { get; init; }
     public string? Bio { get; init; }
     public string? AvatarUrl { get; init; }
+    public string? City { get; init; }
+    public string? Country { get; init; }
 }

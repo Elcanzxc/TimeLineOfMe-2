@@ -48,6 +48,11 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
             profile.AvatarUrl = request.AvatarUrl;
         }
 
+        if (request.IsProfilePrivate.HasValue)
+        {
+            profile.IsProfilePrivate = request.IsProfilePrivate.Value;
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
         return _mapper.Map<UserProfileResponse>(profile);

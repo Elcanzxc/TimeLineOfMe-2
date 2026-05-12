@@ -32,14 +32,17 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         var account = await _context.Accounts
             .Include(a => a.Role)
             .Include(a => a.UserProfile)
+            .Include(a => a.RefreshTokens)
             .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken)
             ?? throw new ForbiddenException("Аккаунт не найден.");
 
-        if (account.RefreshToken != request.RefreshToken ||
-            account.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        var currentToken = account.RefreshTokens.FirstOrDefault(t => t.Token == request.RefreshToken);
+        if (currentToken is null || currentToken.IsRevoked || currentToken.ExpiryTime <= DateTime.UtcNow)
         {
             throw new ForbiddenException("Refresh token невалиден или истёк.");
         }
+        
+        currentToken.IsRevoked = true;
 
         var profile = account.UserProfile!;
 
@@ -55,8 +58,12 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
         var newAccessToken = _jwtService.GenerateAccessToken(newClaims);
         var newRefreshToken = _jwtService.GenerateRefreshToken();
 
-        account.RefreshToken = newRefreshToken;
-        account.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        account.RefreshTokens.Add(new TLOM.Domain.Entities.RefreshToken
+        {
+            Token = newRefreshToken,
+            ExpiryTime = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow
+        });
         await _context.SaveChangesAsync(cancellationToken);
 
         return new AuthResponse

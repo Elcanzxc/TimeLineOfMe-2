@@ -11,6 +11,10 @@ public class EntryResponse
 
     public Guid UserId { get; set; }
 
+    public string UserUsername { get; set; } = string.Empty;
+
+    public string? UserAvatarUrl { get; set; }
+
     public Guid MediaItemId { get; set; }
 
     public string MediaItemTitle { get; set; } = string.Empty;
@@ -27,6 +31,10 @@ public class EntryResponse
 
     public int? TimeSpent { get; set; }
 
+    public DateTime? StartedAt { get; set; }
+
+    public DateTime? FinishedAt { get; set; }
+
     public bool IsPrivate { get; set; }
 
     public bool IsFavorite { get; set; }
@@ -34,6 +42,8 @@ public class EntryResponse
     public int LikesCount { get; set; }
 
     public int CommentsCount { get; set; }
+
+    public List<string> Genres { get; set; } = [];
 
     public DateTime CreatedAt { get; set; }
 

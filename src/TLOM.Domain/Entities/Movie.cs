@@ -21,8 +21,6 @@ public class Movie : MediaItem
 
     public string? Language { get; set; }
 
-    public string? Genre { get; set; }
-
     public decimal? Budget { get; set; }
 
     public string? TrailerUrl { get; set; }

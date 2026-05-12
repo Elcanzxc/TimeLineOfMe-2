@@ -15,8 +15,12 @@ public record CreateEntryCommand : IRequest<EntryResponse>
     /// </summary>
     public Guid MediaItemId { get; init; }
 
-    /// <summary>
-    /// Начальная заметка (опционально).
-    /// </summary>
     public string? Note { get; init; }
+
+    public TLOM.Domain.Enums.EntryStatus? Status { get; init; }
+    public int? Rating { get; init; }
+    public string? Review { get; init; }
+    public DateTime? StartedAt { get; init; }
+    public DateTime? FinishedAt { get; init; }
+    public bool IsPrivate { get; init; } = false;
 }

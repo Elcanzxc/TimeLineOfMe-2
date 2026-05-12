@@ -5,12 +5,30 @@ import { NotificationBell } from './features/notifications/ui/NotificationBell';
 import { ThemeToggle } from './shared/ui/ThemeToggle';
 import { LanguageToggle } from './shared/ui/LanguageToggle';
 import { useTranslation } from 'react-i18next';
+import { Toaster } from 'sonner';
+import { useEffect } from 'react';
+import { useNotificationStore } from './features/notifications/store/useNotificationStore';
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const { t } = useTranslation();
+  
+  const { fetchNotifications, connectSignalR, disconnectSignalR } = useNotificationStore();
+
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      fetchNotifications();
+      connectSignalR(accessToken);
+    } else {
+      disconnectSignalR();
+    }
+    return () => {
+      disconnectSignalR();
+    };
+  }, [isAuthenticated, accessToken, fetchNotifications, connectSignalR, disconnectSignalR]);
 
   const handleLogout = () => {
     logout();
@@ -20,7 +38,7 @@ function App() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300">
       <header className="p-4 border-b border-border flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-50">
-        <Link to={isAuthenticated ? "/dashboard" : "/"}>
+        <Link to={isAuthenticated ? "/feed" : "/"}>
           <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Time Line Of Me
           </h1>
@@ -50,6 +68,7 @@ function App() {
       <main className="flex-1 flex flex-col">
         <Outlet />
       </main>
+      <Toaster position="bottom-right" richColors theme="system" />
     </div>
   );
 }

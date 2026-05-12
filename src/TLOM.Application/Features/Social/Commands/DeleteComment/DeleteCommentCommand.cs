@@ -27,14 +27,16 @@ public class DeleteCommentCommandHandler : IRequestHandler<DeleteCommentCommand,
         var userId = _currentUser.UserProfileId ?? throw new ForbiddenException();
 
         var comment = await _context.Comments
+            .Include(c => c.Entry)
             .FirstOrDefaultAsync(c => c.Id == request.CommentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Comment), request.CommentId);
 
-        // Resource-based: только автор или админ
-        if (comment.UserId != userId && !_currentUser.IsAdmin)
-            throw new ForbiddenException("Вы можете удалять только свои комментарии.");
+        // Resource-based: автор комментария, владелец записи, или админ
+        if (comment.UserId != userId && comment.Entry.UserId != userId && !_currentUser.IsAdmin)
+            throw new ForbiddenException("Вы можете удалять только свои комментарии или комментарии под своими записями.");
 
-        _context.Comments.Remove(comment);
+        comment.IsDeleted = true;
+        comment.DeletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
 
         await _auditService.LogAsync(

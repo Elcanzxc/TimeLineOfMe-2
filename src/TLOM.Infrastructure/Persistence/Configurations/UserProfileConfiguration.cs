@@ -38,7 +38,7 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         });
 
         // === Индексы ===
-        builder.HasIndex(p => p.Username).IsUnique();
+        builder.HasIndex(p => p.Username); // Не уникальный — допускаются повторения
         builder.HasIndex(p => p.AccountId).IsUnique();
     }
 }

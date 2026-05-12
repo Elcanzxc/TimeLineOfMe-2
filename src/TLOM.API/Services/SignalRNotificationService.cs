@@ -6,7 +6,7 @@ namespace TLOM.API.Services;
 
 /// <summary>
 /// Реализация IRealtimePushService через SignalR.
-/// Отправляет уведомление конкретному пользователю через NotificationHub.
+/// Отправляет уведомления и типизированные события клиентам.
 /// </summary>
 public class SignalRNotificationService : IRealtimePushService
 {
@@ -22,6 +22,10 @@ public class SignalRNotificationService : IRealtimePushService
         Guid notificationId,
         string type,
         string message,
+        Guid? actorId = null,
+        string? actorUsername = null,
+        string? entityType = null,
+        Guid? entityId = null,
         CancellationToken cancellationToken = default)
     {
         await _hubContext.Clients
@@ -31,7 +35,33 @@ public class SignalRNotificationService : IRealtimePushService
                 id = notificationId,
                 type,
                 message,
-                timestamp = DateTime.UtcNow
+                actorId,
+                actorUsername,
+                entityType,
+                entityId,
+                isRead = false,
+                createdAt = DateTime.UtcNow.ToString("O")
             }, cancellationToken);
+    }
+
+    public async Task PushEventAsync(
+        Guid recipientId,
+        string eventName,
+        object payload,
+        CancellationToken cancellationToken = default)
+    {
+        await _hubContext.Clients
+            .User(recipientId.ToString())
+            .SendAsync(eventName, payload, cancellationToken);
+    }
+
+    public async Task PushEventToAllAsync(
+        string eventName,
+        object payload,
+        CancellationToken cancellationToken = default)
+    {
+        await _hubContext.Clients
+            .All
+            .SendAsync(eventName, payload, cancellationToken);
     }
 }

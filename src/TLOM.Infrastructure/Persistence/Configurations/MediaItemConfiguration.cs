@@ -49,5 +49,10 @@ public class MediaItemConfiguration : IEntityTypeConfiguration<MediaItem>
         // === Уникальный индекс: один контент в БД в единственном экземпляре ===
         builder.HasIndex(m => new { m.ExternalId, m.ExternalSource })
             .IsUnique();
+
+        // === Связи ===
+        builder.HasMany(m => m.Genres)
+            .WithMany(g => g.MediaItems)
+            .UsingEntity(j => j.ToTable("MediaItemGenres"));
     }
 }

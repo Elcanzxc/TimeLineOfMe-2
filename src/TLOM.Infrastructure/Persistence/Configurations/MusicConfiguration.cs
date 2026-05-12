@@ -13,7 +13,7 @@ public class MusicConfiguration : IEntityTypeConfiguration<Music>
 
         builder.Property(m => m.Artist).HasMaxLength(DomainConstants.MaxArtistLength);
         builder.Property(m => m.Album).HasMaxLength(DomainConstants.MaxAlbumLength);
-        builder.Property(m => m.Genre).HasMaxLength(DomainConstants.MaxGenreLength);
+
         builder.Property(m => m.Label).HasMaxLength(DomainConstants.MaxLabelLength);
         builder.Property(m => m.Language).HasMaxLength(DomainConstants.MaxLanguageLength);
 

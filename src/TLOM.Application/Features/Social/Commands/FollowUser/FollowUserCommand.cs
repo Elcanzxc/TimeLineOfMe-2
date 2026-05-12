@@ -14,12 +14,14 @@ public class FollowUserCommandHandler : IRequestHandler<FollowUserCommand, Unit>
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly INotificationService _notificationService;
+    private readonly IRealtimePushService? _pushService;
 
-    public FollowUserCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, INotificationService notificationService)
+    public FollowUserCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, INotificationService notificationService, IRealtimePushService? pushService = null)
     {
         _context = context;
         _currentUser = currentUser;
         _notificationService = notificationService;
+        _pushService = pushService;
     }
 
     public async Task<Unit> Handle(FollowUserCommand request, CancellationToken cancellationToken)
@@ -49,6 +51,13 @@ public class FollowUserCommandHandler : IRequestHandler<FollowUserCommand, Unit>
             "подписался на вас", actorId: userId,
             entityType: nameof(UserProfile), entityId: userId,
             cancellationToken: cancellationToken);
+
+        // Push real-time event for UI updates
+        if (_pushService is not null)
+        {
+            await _pushService.PushEventAsync(request.TargetUserId, "FollowChanged",
+                new { followerId = userId, targetUserId = request.TargetUserId, action = "followed" }, cancellationToken);
+        }
 
         return Unit.Value;
     }

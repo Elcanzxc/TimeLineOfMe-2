@@ -29,5 +29,8 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
             .WithMany(e => e.Comments)
             .HasForeignKey(c => c.EntryId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // === Soft Delete Filter ===
+        builder.HasQueryFilter(c => !c.IsDeleted);
     }
 }

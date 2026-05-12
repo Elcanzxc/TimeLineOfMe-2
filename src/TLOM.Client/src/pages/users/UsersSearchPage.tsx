@@ -5,6 +5,7 @@ import { Input } from '@/shared/ui/Input';
 import { Card, CardContent } from '@/shared/ui/Card';
 import { apiClient } from '@/shared/api/apiClient';
 import { Search, Loader2, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function useDebounce(value: string, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -25,6 +26,7 @@ interface UserSearchDto {
 }
 
 export function UsersSearchPage() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 500);
 
@@ -44,15 +46,15 @@ export function UsersSearchPage() {
     <div className="max-w-4xl mx-auto p-4 md:p-8 w-full space-y-8">
       <div className="text-center space-y-4">
         <Users className="h-12 w-12 mx-auto text-primary opacity-80" />
-        <h1 className="text-4xl font-extrabold tracking-tight">Find Friends</h1>
-        <p className="text-muted-foreground text-lg">Search for other travelers by their username.</p>
+        <h1 className="text-4xl font-extrabold tracking-tight">{t('users.search_title')}</h1>
+        <p className="text-muted-foreground text-lg">{t('users.search_subtitle')}</p>
         
         <div className="relative max-w-xl mx-auto mt-6">
           <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
           <Input 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a username..."
+            placeholder={t('users.search_placeholder')}
             className="pl-10 h-12 text-lg rounded-full"
           />
         </div>
@@ -67,7 +69,7 @@ export function UsersSearchPage() {
 
         {!isLoading && users?.length === 0 && debouncedQuery.length >= 2 && (
           <div className="text-center py-12 text-muted-foreground">
-            No users found matching "{debouncedQuery}".
+            {t('users.no_results')} "{debouncedQuery}".
           </div>
         )}
 
@@ -89,7 +91,7 @@ export function UsersSearchPage() {
                       {user.bio ? (
                         <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{user.bio}</p>
                       ) : (
-                        <p className="text-xs text-muted-foreground italic mt-1">No bio provided</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">{t('users.profile.bio_empty')}</p>
                       )}
                     </div>
                   </CardContent>

@@ -7,7 +7,7 @@ namespace TLOM.Domain.Entities;
 /// Карточка — сердце таймлайна. Связывает Пользователя и Контент.
 /// Хранит статус, оценку, ревью, время и флаги приватности/избранного.
 /// </summary>
-public class Entry : AuditableEntity
+public class Entry : AuditableEntity, ISoftDeletable
 {
     public Guid UserId { get; set; }
 
@@ -35,6 +35,16 @@ public class Entry : AuditableEntity
     public int? TimeSpent { get; set; }
 
     /// <summary>
+    /// Когда пользователь начал взаимодействовать с медиа (пользовательская дата).
+    /// </summary>
+    public DateTime? StartedAt { get; set; }
+
+    /// <summary>
+    /// Когда пользователь закончил или бросил медиа (пользовательская дата).
+    /// </summary>
+    public DateTime? FinishedAt { get; set; }
+
+    /// <summary>
     /// Скрыть запись из публичного таймлайна.
     /// </summary>
     public bool IsPrivate { get; set; }
@@ -43,6 +53,10 @@ public class Entry : AuditableEntity
     /// Является ли карточка избранной.
     /// </summary>
     public bool IsFavorite { get; set; }
+
+    public bool IsDeleted { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
 
     // === Navigation Properties ===
     public UserProfile User { get; set; } = null!;

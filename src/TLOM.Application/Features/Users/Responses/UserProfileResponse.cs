@@ -15,5 +15,6 @@ public class UserProfileResponse
     public int FollowersCount { get; set; }
     public int FollowingCount { get; set; }
     public int EntriesCount { get; set; }
+    public bool IsProfilePrivate { get; set; }
     public DateTime CreatedAt { get; set; }
 }

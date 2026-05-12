@@ -1,10 +1,16 @@
 version: '3.8'
 
 services:
-  redis:
-    image: redis:alpine
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "TlomProd@2026!"
     expose:
-      - "6379"
+      - "1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    restart: unless-stopped
 
   api:
     build:
@@ -14,11 +20,9 @@ services:
       - "5170:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
-      - ConnectionStrings__Redis=redis:6379
+      - ConnectionStrings__DefaultConnection=Server=db;Database=TLOM;User Id=sa;Password=TlomProd@2026!;TrustServerCertificate=True;
       - ClientUrl=http://${EC2_HOST}
       - Jwt__Secret=${JWT_SECRET}
-
       - Jwt__Issuer=TLOM.API
       - Jwt__Audience=TLOM.Client
       - Google__ClientId=${GOOGLE_CLIENT_ID}
@@ -26,11 +30,21 @@ services:
       - Smtp__Username=${SMTP_USERNAME}
       - Smtp__Password=${SMTP_PASSWORD}
       - Smtp__FromEmail=${SMTP_FROM_EMAIL}
+      - Smtp__Host=smtp.gmail.com
+      - Smtp__Port=587
+      - Smtp__EnableSsl=true
       - ExternalApis__Tmdb__BearerToken=${TMDB_BEARER_TOKEN}
       - ExternalApis__Tmdb__ApiKey=${TMDB_API_KEY}
       - ExternalApis__GoogleBooks__ApiKey=${GOOGLE_BOOKS_API_KEY}
       - ExternalApis__Spotify__ClientId=${SPOTIFY_CLIENT_ID}
       - ExternalApis__Spotify__ClientSecret=${SPOTIFY_CLIENT_SECRET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS__BucketName=${AWS_BUCKET_NAME}
+    depends_on:
+      - db
+    restart: unless-stopped
 
   client:
     build:
@@ -40,3 +54,7 @@ services:
       - "80:80"
     depends_on:
       - api
+    restart: unless-stopped
+
+volumes:
+  sql_data:

@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { apiClient } from '@/shared/api/apiClient';
+import { HubConnection, HubConnectionBuilder, LogLevel, HubConnectionState } from '@microsoft/signalr';
+import { toast } from 'sonner';
 
 export interface AppNotification {
   id: string;
@@ -8,6 +10,7 @@ export interface AppNotification {
   isRead: boolean;
   createdAt: string;
   actorId?: string;
+  actorUsername?: string;
   entityId?: string;
   entityType?: string;
 }
@@ -22,6 +25,9 @@ interface NotificationState {
   markAllAsRead: () => Promise<void>;
   setNotifications: (notifications: AppNotification[]) => void;
   clear: () => void;
+  connection: HubConnection | null;
+  connectSignalR: (token: string) => Promise<void>;
+  disconnectSignalR: () => void;
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
@@ -86,4 +92,47 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   clear: () => set({ notifications: [], unreadCount: 0 }),
+
+  connection: null,
+
+  connectSignalR: async (token: string) => {
+    if (get().connection) return;
+
+    const connection = new HubConnectionBuilder()
+      .withUrl(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hubs/notifications`, {
+        accessTokenFactory: () => token,
+      })
+      .configureLogging(LogLevel.Information)
+      .withAutomaticReconnect()
+      .build();
+
+    // Set connection immediately to prevent double-connections during React StrictMode double mounts
+    set({ connection });
+
+    connection.on('ReceiveNotification', (notification: AppNotification) => {
+      get().addNotification(notification);
+      // Show toast on new notification
+      toast(notification.message, {
+        description: 'New notification',
+        duration: 5000,
+      });
+    });
+
+    try {
+      await connection.start();
+      console.log('SignalR connected');
+    } catch (err) {
+      console.error('SignalR connection failed:', err);
+      set({ connection: null });
+    }
+  },
+
+  disconnectSignalR: () => {
+    const conn = get().connection;
+    if (conn && conn.state === HubConnectionState.Connected) {
+      conn.stop();
+      set({ connection: null });
+      console.log('SignalR disconnected');
+    }
+  }
 }));

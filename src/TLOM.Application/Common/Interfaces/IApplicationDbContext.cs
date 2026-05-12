@@ -12,12 +12,14 @@ public interface IApplicationDbContext
     // === Identity ===
     DbSet<Account> Accounts { get; }
     DbSet<Role> Roles { get; }
+    DbSet<RefreshToken> RefreshTokens { get; }
 
     // === Profile ===
     DbSet<UserProfile> UserProfiles { get; }
 
     // === Media Content (TPT) ===
     DbSet<MediaItem> MediaItems { get; }
+    DbSet<Genre> Genres { get; }
     DbSet<Movie> Movies { get; }
     DbSet<Book> Books { get; }
     DbSet<Game> Games { get; }

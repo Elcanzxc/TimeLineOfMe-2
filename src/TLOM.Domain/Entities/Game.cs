@@ -14,8 +14,6 @@ public class Game : MediaItem
     /// </summary>
     public string? Platform { get; set; }
 
-    public string? Genre { get; set; }
-
     /// <summary>
     /// Среднее время прохождения в часах.
     /// </summary>

@@ -28,10 +28,6 @@ public class Account : BaseEntity
     /// </summary>
     public string? GoogleId { get; set; }
 
-    public string? RefreshToken { get; set; }
-
-    public DateTime? RefreshTokenExpiryTime { get; set; }
-
     public Guid RoleId { get; set; }
 
     public bool IsActive { get; set; } = true;
@@ -46,4 +42,6 @@ public class Account : BaseEntity
     public UserProfile? UserProfile { get; set; }
 
     public ICollection<AuditLog> AuditLogs { get; set; } = [];
+
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
 }

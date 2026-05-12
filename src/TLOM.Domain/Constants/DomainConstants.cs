@@ -37,8 +37,10 @@ public static class DomainConstants
     public const int MaxCastLength = 2000;
     public const int MaxCountryNameLength = 100;
     public const int MaxLanguageLength = 100;
-    public const int MaxGenreLength = 200;
     public const int MaxTrailerUrlLength = 2048;
+
+    // === Genre ===
+    public const int MaxGenreNameLength = 100;
 
     // === Book ===
     public const int MaxAuthorLength = 200;

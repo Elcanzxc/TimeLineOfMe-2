@@ -55,4 +55,21 @@ public class AdminController : ControllerBase
         }, ct);
         return Ok(result);
     }
+
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetPlatformStats(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new TLOM.Application.Features.Stats.Queries.GetPlatformStats.GetPlatformStatsQuery(), ct);
+        return Ok(result);
+    }
+
+    [HttpPut("users/{id:guid}/roles")]
+    public async Task<IActionResult> ChangeUserRole(Guid id, [FromBody] TLOM.Application.Features.Admin.Commands.ChangeUserRole.ChangeUserRoleCommand command, CancellationToken ct)
+    {
+        if (id != command.AccountId)
+            return BadRequest();
+            
+        var result = await _mediator.Send(command, ct);
+        return Ok(result);
+    }
 }

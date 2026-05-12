@@ -28,6 +28,8 @@ public class UserProfile : AuditableEntity
 
     public bool IsProfileCompleted { get; set; } = false;
 
+    public bool IsProfilePrivate { get; set; } = false;
+
     /// <summary>
     /// Адрес (город/страна/регион) — Value Object, маппится как Owned Entity.
     /// </summary>

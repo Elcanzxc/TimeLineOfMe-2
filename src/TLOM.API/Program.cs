@@ -26,6 +26,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IRealtimePushService, SignalRNotificationService>();
+builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, TLOM.API.Services.UserProfileIdProvider>();
 
 // === JWT Authentication ===
 var jwtSecret = builder.Configuration["Jwt:Secret"]
@@ -85,7 +86,12 @@ builder.Services.AddCors(options =>
 });
 
 // === Controllers ===
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 // === Swagger ===
 builder.Services.AddEndpointsApiExplorer();

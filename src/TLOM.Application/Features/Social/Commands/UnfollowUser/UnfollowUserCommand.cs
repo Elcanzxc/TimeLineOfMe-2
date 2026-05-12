@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TLOM.Application.Common.Interfaces;
 using TLOM.Domain.Entities;
+using TLOM.Domain.Enums;
 using TLOM.Domain.Exceptions;
 
 namespace TLOM.Application.Features.Social.Commands.UnfollowUser;
@@ -12,11 +13,13 @@ public class UnfollowUserCommandHandler : IRequestHandler<UnfollowUserCommand, U
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly INotificationService _notificationService;
 
-    public UnfollowUserCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
+    public UnfollowUserCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, INotificationService notificationService)
     {
         _context = context;
         _currentUser = currentUser;
+        _notificationService = notificationService;
     }
 
     public async Task<Unit> Handle(UnfollowUserCommand request, CancellationToken cancellationToken)
@@ -29,6 +32,12 @@ public class UnfollowUserCommandHandler : IRequestHandler<UnfollowUserCommand, U
 
         _context.Follows.Remove(follow);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _notificationService.SendAsync(
+            request.TargetUserId, NotificationType.NewFollower,
+            "отписался от вас", actorId: userId,
+            entityType: nameof(UserProfile), entityId: userId,
+            cancellationToken: cancellationToken);
 
         return Unit.Value;
     }

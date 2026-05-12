@@ -5,6 +5,7 @@ using TLOM.Application.Common.Interfaces;
 using TLOM.Infrastructure.Persistence;
 using TLOM.Infrastructure.Persistence.Interceptors;
 using TLOM.Infrastructure.Services;
+using Amazon.S3;
 
 namespace TLOM.Infrastructure;
 
@@ -52,8 +53,21 @@ public static class DependencyInjection
         // === Сервисы ===
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<INotificationService, NotificationService>();
+        // === AWS Services ===
+        var awsOptions = configuration.GetAWSOptions();
+        var accessKey = configuration["AWS:AccessKey"];
+        var secretKey = configuration["AWS:SecretKey"];
+        
+        if (!string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey))
+        {
+            awsOptions.Credentials = new Amazon.Runtime.BasicAWSCredentials(accessKey, secretKey);
+        }
+        
+        services.AddDefaultAWSOptions(awsOptions);
+        services.AddAWSService<IAmazonS3>();
+
         services.AddScoped<ICacheService, RedisCacheService>();
-        services.AddScoped<IFileStorageService, FileStorageService>();
+        services.AddScoped<IFileStorageService, AwsS3StorageService>(); // AWS S3 Implementation
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();

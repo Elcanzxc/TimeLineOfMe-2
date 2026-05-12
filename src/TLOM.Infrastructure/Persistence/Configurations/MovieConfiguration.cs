@@ -15,7 +15,7 @@ public class MovieConfiguration : IEntityTypeConfiguration<Movie>
         builder.Property(m => m.Cast).HasMaxLength(DomainConstants.MaxCastLength);
         builder.Property(m => m.Country).HasMaxLength(DomainConstants.MaxCountryNameLength);
         builder.Property(m => m.Language).HasMaxLength(DomainConstants.MaxLanguageLength);
-        builder.Property(m => m.Genre).HasMaxLength(DomainConstants.MaxGenreLength);
+
         builder.Property(m => m.Budget).HasPrecision(18, 2);
         builder.Property(m => m.TrailerUrl).HasMaxLength(DomainConstants.MaxTrailerUrlLength);
     }

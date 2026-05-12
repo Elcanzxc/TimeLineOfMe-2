@@ -16,19 +16,22 @@ public class DeleteEntryCommandHandler : IRequestHandler<DeleteEntryCommand, Uni
     private readonly IAuditService _auditService;
     private readonly ICacheService _cacheService;
     private readonly INotificationService _notificationService;
+    private readonly IRealtimePushService? _pushService;
 
     public DeleteEntryCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IAuditService auditService,
         ICacheService cacheService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IRealtimePushService? pushService = null)
     {
         _context = context;
         _currentUser = currentUser;
         _auditService = auditService;
         _cacheService = cacheService;
         _notificationService = notificationService;
+        _pushService = pushService;
     }
 
     public async Task<Unit> Handle(DeleteEntryCommand request, CancellationToken cancellationToken)
@@ -44,7 +47,8 @@ public class DeleteEntryCommandHandler : IRequestHandler<DeleteEntryCommand, Uni
         if (entry.UserId != userId && !_currentUser.IsAdmin)
             throw new ForbiddenException("Вы можете удалять только свои записи.");
 
-        _context.Entries.Remove(entry);
+        entry.IsDeleted = true;
+        entry.DeletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
 
         await _auditService.LogAsync(
@@ -59,6 +63,13 @@ public class DeleteEntryCommandHandler : IRequestHandler<DeleteEntryCommand, Uni
             cancellationToken: cancellationToken);
 
         await _cacheService.RemoveByPatternAsync($"entries:user:{entry.UserId}*", cancellationToken);
+
+        // Push real-time event so timeline/feed update instantly
+        if (_pushService is not null)
+        {
+            await _pushService.PushEventAsync(userId, "EntryDeleted",
+                new { entryId = request.EntryId }, cancellationToken);
+        }
 
         return Unit.Value;
     }

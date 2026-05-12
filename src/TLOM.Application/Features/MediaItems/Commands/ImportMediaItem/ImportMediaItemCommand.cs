@@ -42,6 +42,24 @@ public class ImportMediaItemCommandHandler : IRequestHandler<ImportMediaItemComm
         var externalData = await _searchService.GetByExternalIdAsync(request.ExternalId, request.Source, cancellationToken)
             ?? throw new NotFoundException("MediaItem", $"{request.Source}:{request.ExternalId}");
 
+        var genresList = new List<Genre>();
+        if (!string.IsNullOrWhiteSpace(externalData.Genre))
+        {
+            var genreNames = externalData.Genre.Split(new[] { ',', '/' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var g in genreNames)
+            {
+                var existingGenre = await _context.Genres.FirstOrDefaultAsync(x => x.Name == g, cancellationToken);
+                if (existingGenre != null)
+                {
+                    genresList.Add(existingGenre);
+                }
+                else
+                {
+                    genresList.Add(new Genre { Id = Guid.NewGuid(), Name = g });
+                }
+            }
+        }
+
         MediaItem mediaItem = request.MediaType switch
         {
             MediaType.Movie => new Movie
@@ -56,7 +74,7 @@ public class ImportMediaItemCommandHandler : IRequestHandler<ImportMediaItemComm
                 ExternalSource = externalData.Source,
                 MediaType = MediaType.Movie,
                 Director = externalData.Director,
-                Genre = externalData.Genre,
+                Genres = genresList,
                 Duration = externalData.DurationMinutes ?? 0
             },
             MediaType.Book => new Book
@@ -72,7 +90,7 @@ public class ImportMediaItemCommandHandler : IRequestHandler<ImportMediaItemComm
                 MediaType = MediaType.Book,
                 Author = externalData.Author,
                 PageCount = externalData.PageCount ?? 0,
-                Genre = externalData.Genre
+                Genres = genresList
             },
             MediaType.Game => new Game
             {
@@ -86,7 +104,7 @@ public class ImportMediaItemCommandHandler : IRequestHandler<ImportMediaItemComm
                 ExternalSource = externalData.Source,
                 MediaType = MediaType.Game,
                 Developer = externalData.Developer,
-                Genre = externalData.Genre
+                Genres = genresList
             },
             MediaType.Music => new Music
             {
@@ -101,7 +119,7 @@ public class ImportMediaItemCommandHandler : IRequestHandler<ImportMediaItemComm
                 MediaType = MediaType.Music,
                 Artist = externalData.Artist,
                 Duration = (externalData.DurationMinutes ?? 0) * 60,
-                Genre = externalData.Genre
+                Genres = genresList
             },
             _ => throw new DomainValidationException("MediaType", "Неподдерживаемый тип медиа.")
         };

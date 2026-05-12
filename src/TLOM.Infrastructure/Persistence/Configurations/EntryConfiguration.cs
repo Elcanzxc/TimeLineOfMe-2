@@ -39,5 +39,8 @@ public class EntryConfiguration : IEntityTypeConfiguration<Entry>
             .WithMany(m => m.Entries)
             .HasForeignKey(e => e.MediaItemId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // === Soft Delete Filter ===
+        builder.HasQueryFilter(e => !e.IsDeleted);
     }
 }

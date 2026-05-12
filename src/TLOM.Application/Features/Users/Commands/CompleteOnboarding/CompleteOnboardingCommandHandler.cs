@@ -13,12 +13,18 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
 
-    public CompleteOnboardingCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, IMapper mapper)
+    public CompleteOnboardingCommandHandler(
+        IApplicationDbContext context, 
+        ICurrentUserService currentUser, 
+        IMapper mapper,
+        INotificationService notificationService)
     {
         _context = context;
         _currentUser = currentUser;
         _mapper = mapper;
+        _notificationService = notificationService;
     }
 
     public async Task<UserProfileResponse> Handle(CompleteOnboardingCommand request, CancellationToken cancellationToken)
@@ -64,9 +70,24 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
             profile.AvatarUrl = request.AvatarUrl;
         }
 
+        if (!string.IsNullOrEmpty(request.City) || !string.IsNullOrEmpty(request.Country))
+        {
+            profile.Address = new TLOM.Domain.ValueObjects.Address
+            {
+                City = request.City,
+                Country = request.Country
+            };
+        }
+
         profile.IsProfileCompleted = true;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _notificationService.SendAsync(
+            recipientId: profileId,
+            type: TLOM.Domain.Enums.NotificationType.System,
+            message: "Congratulations on registering! Welcome to Time Line Of Me.",
+            cancellationToken: cancellationToken);
 
         return _mapper.Map<UserProfileResponse>(profile);
     }

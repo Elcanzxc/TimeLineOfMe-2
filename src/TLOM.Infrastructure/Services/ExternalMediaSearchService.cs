@@ -38,7 +38,7 @@ public class ExternalMediaSearchService : IExternalMediaSearchService
             MediaType.Movie => await SearchTmdbAsync(query, cancellationToken),
             MediaType.Book => await SearchGoogleBooksAsync(query, cancellationToken),
             MediaType.Game => await SearchSteamAsync(query, cancellationToken),
-            MediaType.Music => await SearchSpotifyAsync(query, cancellationToken),
+            MediaType.Music => await SearchDeezerAsync(query, cancellationToken),
             _ => []
         };
     }
@@ -50,7 +50,7 @@ public class ExternalMediaSearchService : IExternalMediaSearchService
             ExternalSource.TMDB => await GetTmdbByIdAsync(externalId, cancellationToken),
             ExternalSource.GoogleBooks => await GetGoogleBookByIdAsync(externalId, cancellationToken),
             ExternalSource.Steam => await GetSteamByIdAsync(externalId, cancellationToken),
-            ExternalSource.Spotify => await GetSpotifyByIdAsync(externalId, cancellationToken),
+            ExternalSource.Deezer => await GetDeezerByIdAsync(externalId, cancellationToken),
             _ => null
         };
     }
@@ -149,38 +149,57 @@ public class ExternalMediaSearchService : IExternalMediaSearchService
     private async Task<List<ExternalMediaResult>> SearchGoogleBooksAsync(string query, CancellationToken ct)
     {
         var apiKey = _configuration["ExternalApis:GoogleBooks:ApiKey"];
-        if (string.IsNullOrEmpty(apiKey)) return [];
-
-        var client = _httpClientFactory.CreateClient();
-        var url = $"https://www.googleapis.com/books/v1/volumes?q={Uri.EscapeDataString(query)}&maxResults=15&key={apiKey}";
-        var response = await client.GetAsync(url, ct);
-        if (!response.IsSuccessStatusCode) return [];
-
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
-        if (!json.TryGetProperty("items", out var items)) return [];
-
-        var results = new List<ExternalMediaResult>();
-        foreach (var item in items.EnumerateArray().Take(15))
+        if (string.IsNullOrEmpty(apiKey))
         {
-            var vol = item.GetProperty("volumeInfo");
-            var imageLinks = vol.TryGetProperty("imageLinks", out var il)
-                ? (il.TryGetProperty("thumbnail", out var th) ? th.GetString() : null)
-                : null;
-
-            results.Add(new ExternalMediaResult
-            {
-                ExternalId = item.GetProperty("id").GetString() ?? "",
-                Source = ExternalSource.GoogleBooks,
-                MediaType = MediaType.Book,
-                Title = vol.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
-                ReleaseYear = TryParseYear(vol, "publishedDate"),
-                CoverImageUrl = imageLinks?.Replace("http://", "https://"),
-                Description = vol.TryGetProperty("description", out var d) ? d.GetString() : null,
-                Author = vol.TryGetProperty("authors", out var a) ? string.Join(", ", a.EnumerateArray().Select(x => x.GetString())) : null,
-                PageCount = vol.TryGetProperty("pageCount", out var pc) ? pc.GetInt32() : null
-            });
+            _logger.LogWarning("Google Books API key is not configured");
+            return [];
         }
-        return results;
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            var url = $"https://www.googleapis.com/books/v1/volumes?q={Uri.EscapeDataString(query)}&maxResults=15&key={apiKey}";
+            _logger.LogInformation("Searching Google Books for: {Query}", query);
+            var response = await client.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogError("Google Books API returned {Status}: {Body}", response.StatusCode, body);
+                return [];
+            }
+
+            var json = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+            if (!json.TryGetProperty("items", out var items)) return [];
+
+            var results = new List<ExternalMediaResult>();
+            foreach (var item in items.EnumerateArray().Take(15))
+            {
+                var vol = item.GetProperty("volumeInfo");
+                var imageLinks = vol.TryGetProperty("imageLinks", out var il)
+                    ? (il.TryGetProperty("thumbnail", out var th) ? th.GetString() : null)
+                    : null;
+
+                results.Add(new ExternalMediaResult
+                {
+                    ExternalId = item.GetProperty("id").GetString() ?? "",
+                    Source = ExternalSource.GoogleBooks,
+                    MediaType = MediaType.Book,
+                    Title = vol.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
+                    ReleaseYear = TryParseYear(vol, "publishedDate"),
+                    CoverImageUrl = imageLinks?.Replace("http://", "https://"),
+                    Description = vol.TryGetProperty("description", out var d) ? d.GetString() : null,
+                    Author = vol.TryGetProperty("authors", out var a) ? string.Join(", ", a.EnumerateArray().Select(x => x.GetString())) : null,
+                    PageCount = vol.TryGetProperty("pageCount", out var pc) ? pc.GetInt32() : null
+                });
+            }
+            _logger.LogInformation("Google Books returned {Count} results for '{Query}'", results.Count, query);
+            return results;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Google Books for '{Query}'", query);
+            return [];
+        }
     }
 
     private async Task<ExternalMediaResult?> GetGoogleBookByIdAsync(string externalId, CancellationToken ct)
@@ -318,101 +337,98 @@ public class ExternalMediaSearchService : IExternalMediaSearchService
         }
     }
 
-    // ==================== Spotify (Музыка) ====================
+    // ==================== Deezer (Музыка) ====================
 
-    private string? _spotifyToken;
-    private DateTime _spotifyTokenExpiry = DateTime.MinValue;
-
-    private async Task<string?> GetSpotifyTokenAsync(CancellationToken ct)
+    private async Task<List<ExternalMediaResult>> SearchDeezerAsync(string query, CancellationToken ct)
     {
-        if (_spotifyToken != null && DateTime.UtcNow < _spotifyTokenExpiry)
-            return _spotifyToken;
-
-        var clientId = _configuration["ExternalApis:Spotify:ClientId"];
-        var clientSecret = _configuration["ExternalApis:Spotify:ClientSecret"];
-        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret)) return null;
-
-        var client = _httpClientFactory.CreateClient();
-        var authValue = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authValue);
-
-        var content = new FormUrlEncodedContent([new KeyValuePair<string, string>("grant_type", "client_credentials")]);
-        var response = await client.PostAsync("https://accounts.spotify.com/api/token", content, ct);
-        if (!response.IsSuccessStatusCode) return null;
-
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
-        _spotifyToken = json.GetProperty("access_token").GetString();
-        var expiresIn = json.GetProperty("expires_in").GetInt32();
-        _spotifyTokenExpiry = DateTime.UtcNow.AddSeconds(expiresIn - 60);
-
-        return _spotifyToken;
-    }
-
-    private async Task<List<ExternalMediaResult>> SearchSpotifyAsync(string query, CancellationToken ct)
-    {
-        var token = await GetSpotifyTokenAsync(ct);
-        if (token == null) return [];
-
-        var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var url = $"https://api.spotify.com/v1/search?q={Uri.EscapeDataString(query)}&type=track&limit=15";
-        var response = await client.GetAsync(url, ct);
-        if (!response.IsSuccessStatusCode) return [];
-
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
-        var tracks = json.GetProperty("tracks").GetProperty("items");
-
-        var results = new List<ExternalMediaResult>();
-        foreach (var track in tracks.EnumerateArray())
+        try
         {
-            var album = track.GetProperty("album");
-            var artists = track.GetProperty("artists");
-            var images = album.TryGetProperty("images", out var imgs) ? imgs.EnumerateArray().FirstOrDefault() : default;
-
-            results.Add(new ExternalMediaResult
+            var client = _httpClientFactory.CreateClient();
+            var url = $"https://api.deezer.com/search?q={Uri.EscapeDataString(query)}&limit=15";
+            _logger.LogInformation("Searching Deezer for: {Query}", query);
+            var response = await client.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
             {
-                ExternalId = track.GetProperty("id").GetString() ?? "",
-                Source = ExternalSource.Spotify,
-                MediaType = MediaType.Music,
-                Title = track.GetProperty("name").GetString() ?? "",
-                Artist = string.Join(", ", artists.EnumerateArray().Select(a => a.GetProperty("name").GetString())),
-                ReleaseYear = TryParseYear(album, "release_date"),
-                CoverImageUrl = images.ValueKind != JsonValueKind.Undefined && images.TryGetProperty("url", out var u) ? u.GetString() : null,
-                DurationMinutes = track.TryGetProperty("duration_ms", out var ms) ? ms.GetInt32() / 60000 : null
-            });
+                var body = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogError("Deezer API returned {Status}: {Body}", response.StatusCode, body);
+                return [];
+            }
+
+            var json = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+            if (!json.TryGetProperty("data", out var data)) return [];
+
+            var results = new List<ExternalMediaResult>();
+            foreach (var track in data.EnumerateArray())
+            {
+                var artist = track.TryGetProperty("artist", out var a) ? a : default;
+                var album = track.TryGetProperty("album", out var al) ? al : default;
+                var coverUrl = album.ValueKind != JsonValueKind.Undefined && album.TryGetProperty("cover_big", out var cover)
+                    ? cover.GetString()
+                    : null;
+
+                results.Add(new ExternalMediaResult
+                {
+                    ExternalId = track.GetProperty("id").GetInt64().ToString(),
+                    Source = ExternalSource.Deezer,
+                    MediaType = MediaType.Music,
+                    Title = track.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
+                    Artist = artist.ValueKind != JsonValueKind.Undefined && artist.TryGetProperty("name", out var an) ? an.GetString() : null,
+                    CoverImageUrl = coverUrl,
+                    DurationMinutes = track.TryGetProperty("duration", out var dur) ? dur.GetInt32() / 60 : null
+                });
+            }
+            _logger.LogInformation("Deezer returned {Count} results for '{Query}'", results.Count, query);
+            return results;
         }
-        return results;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching Deezer for '{Query}'", query);
+            return [];
+        }
     }
 
-    private async Task<ExternalMediaResult?> GetSpotifyByIdAsync(string externalId, CancellationToken ct)
+    private async Task<ExternalMediaResult?> GetDeezerByIdAsync(string externalId, CancellationToken ct)
     {
-        var token = await GetSpotifyTokenAsync(ct);
-        if (token == null) return null;
-
-        var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var url = $"https://api.spotify.com/v1/tracks/{externalId}";
-        var response = await client.GetAsync(url, ct);
-        if (!response.IsSuccessStatusCode) return null;
-
-        var track = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
-        var album = track.GetProperty("album");
-        var artists = track.GetProperty("artists");
-        var images = album.TryGetProperty("images", out var imgs) ? imgs.EnumerateArray().FirstOrDefault() : default;
-
-        return new ExternalMediaResult
+        try
         {
-            ExternalId = externalId,
-            Source = ExternalSource.Spotify,
-            MediaType = MediaType.Music,
-            Title = track.GetProperty("name").GetString() ?? "",
-            Artist = string.Join(", ", artists.EnumerateArray().Select(a => a.GetProperty("name").GetString())),
-            ReleaseYear = TryParseYear(album, "release_date"),
-            CoverImageUrl = images.ValueKind != JsonValueKind.Undefined && images.TryGetProperty("url", out var u) ? u.GetString() : null,
-            DurationMinutes = track.TryGetProperty("duration_ms", out var ms) ? ms.GetInt32() / 60000 : null
-        };
+            var client = _httpClientFactory.CreateClient();
+            var url = $"https://api.deezer.com/track/{externalId}";
+            var response = await client.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode) return null;
+
+            var track = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+            var artist = track.TryGetProperty("artist", out var a) ? a : default;
+            var album = track.TryGetProperty("album", out var al) ? al : default;
+            var coverUrl = album.ValueKind != JsonValueKind.Undefined && album.TryGetProperty("cover_big", out var cover)
+                ? cover.GetString()
+                : null;
+
+            // Try to get release year from album
+            int releaseYear = 0;
+            if (album.ValueKind != JsonValueKind.Undefined && album.TryGetProperty("release_date", out var rd))
+            {
+                var dateStr = rd.GetString();
+                if (!string.IsNullOrEmpty(dateStr) && dateStr.Length >= 4)
+                    int.TryParse(dateStr[..4], out releaseYear);
+            }
+
+            return new ExternalMediaResult
+            {
+                ExternalId = externalId,
+                Source = ExternalSource.Deezer,
+                MediaType = MediaType.Music,
+                Title = track.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
+                Artist = artist.ValueKind != JsonValueKind.Undefined && artist.TryGetProperty("name", out var an) ? an.GetString() : null,
+                ReleaseYear = releaseYear,
+                CoverImageUrl = coverUrl,
+                DurationMinutes = track.TryGetProperty("duration", out var dur) ? dur.GetInt32() / 60 : null
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching Deezer track {Id}", externalId);
+            return null;
+        }
     }
 
     // ==================== Helpers ====================
