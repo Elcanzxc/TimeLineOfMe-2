@@ -71,4 +71,4 @@ Real-time: @microsoft/signalr клиент для получения push-уве
 
 Containerization: Dockerfile для бэкенда (.NET 10) и фронтенда (React + Nginx). Docker Compose для локальной разработки (API + SQL Server + Redis).
 
-CI/CD: Подготовка к автоматизированному деплою (GitHub Actions → ECR → ECS).
+CI/CD: Подготовка к автоматизированному деплою (GitHub Actions → ECR → ECS).s
