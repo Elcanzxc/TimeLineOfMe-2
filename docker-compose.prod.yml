@@ -57,7 +57,8 @@ services:
       - "443:443"
     volumes:
       - /etc/letsencrypt/ssl-certs:/etc/nginx/ssl:ro
-      - ./src/TLOM.Client/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+    command: >
+      sh -c "cp /etc/nginx/conf.d/nginx.prod.conf.bak /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     depends_on:
       - api
     restart: unless-stopped

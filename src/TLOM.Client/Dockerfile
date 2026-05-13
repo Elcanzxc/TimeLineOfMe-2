@@ -19,7 +19,7 @@ RUN npm run build
 
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
-# Copy custom nginx configuration for React Router
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+COPY nginx.prod.conf /etc/nginx/conf.d/nginx.prod.conf.bak
+EXPOSE 80 443
 CMD ["nginx", "-g", "daemon off;"]
