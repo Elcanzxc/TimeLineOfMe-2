@@ -99,7 +99,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     if (get().connection) return;
 
     const connection = new HubConnectionBuilder()
-      .withUrl(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hubs/notifications`, {
+      .withUrl(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5170')}/hubs/notifications`, {
         accessTokenFactory: () => token,
       })
       .configureLogging(LogLevel.Information)

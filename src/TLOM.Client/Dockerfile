@@ -31,6 +31,7 @@ server {\n\
     ssl_certificate /etc/nginx/ssl/fullchain.pem;\n\
     ssl_certificate_key /etc/nginx/ssl/privkey.pem;\n\
     ssl_protocols TLSv1.2 TLSv1.3;\n\
+    client_max_body_size 50m;\n\
     location / {\n\
         root /usr/share/nginx/html;\n\
         index index.html;\n\
@@ -41,6 +42,7 @@ server {\n\
         proxy_set_header Host $host;\n\
         proxy_set_header X-Real-IP $remote_addr;\n\
         proxy_set_header X-Forwarded-Proto $scheme;\n\
+        client_max_body_size 50m;\n\
     }\n\
     location /hubs/ {\n\
         proxy_pass http://api:8080/hubs/;\n\
@@ -48,6 +50,7 @@ server {\n\
         proxy_set_header Upgrade $http_upgrade;\n\
         proxy_set_header Connection "Upgrade";\n\
         proxy_set_header Host $host;\n\
+        proxy_read_timeout 86400s;\n\
     }\n\
 }\n' > /etc/nginx/conf.d/ssl.conf.bak
 
