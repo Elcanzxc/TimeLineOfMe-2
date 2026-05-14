@@ -2,7 +2,7 @@
 
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/azure-sql-edge:latest
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "TlomProd@2026!"
